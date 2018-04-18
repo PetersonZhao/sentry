@@ -36,6 +36,8 @@ from sentry.web.frontend.mailgun_inbound_webhook import \
 from sentry.web.frontend.oauth_authorize import OAuthAuthorizeView
 from sentry.web.frontend.oauth_token import OAuthTokenView
 from sentry.auth.providers.saml2 import SAML2AcceptACSView, SAML2SLSView, SAML2MetadataView
+from sentry.web.frontend.organization_avatar import OrganizationAvatarPhotoView
+from sentry.web.frontend.team_avatar import TeamAvatarPhotoView
 from sentry.web.frontend.organization_auth_settings import \
     OrganizationAuthSettingsView
 from sentry.web.frontend.organization_integration_setup import \
@@ -49,7 +51,6 @@ from sentry.web.frontend.restore_organization import RestoreOrganizationView
 from sentry.web.frontend.remove_project import RemoveProjectView
 from sentry.web.frontend.transfer_project import TransferProjectView
 from sentry.web.frontend.account_identity import AccountIdentityAssociateView, AccountIdentityLinkView
-from sentry.web.frontend.accept_project_transfer import AcceptProjectTransferView
 from sentry.web.frontend.remove_team import RemoveTeamView
 from sentry.web.frontend.sudo import SudoView
 from sentry.web.frontend.unsubscribe_issue_notifications import \
@@ -352,9 +353,7 @@ urlpatterns += patterns(
     url(r'^api/[^0]+/', generic_react_page_view),
     url(r'^out/$', OutView.as_view()),
 
-    url(r'^accept-transfer/$', AcceptProjectTransferView.as_view(),
-        name='sentry-accept-project-transfer'),
-
+    url(r'^accept-transfer/$', react_page_view, name='sentry-accept-project-transfer'),
     url(r'^settings/', react_page_view),
 
     # Organizations
@@ -447,6 +446,16 @@ urlpatterns += patterns(
         r'^avatar/(?P<avatar_id>[^\/]+)/$',
         UserAvatarPhotoView.as_view(),
         name='sentry-user-avatar-url'
+    ),
+    url(
+        r'^organization-avatar/(?P<avatar_id>[^\/]+)/$',
+        OrganizationAvatarPhotoView.as_view(),
+        name='sentry-organization-avatar-url'
+    ),
+    url(
+        r'^team-avatar/(?P<avatar_id>[^\/]+)/$',
+        TeamAvatarPhotoView.as_view(),
+        name='sentry-team-avatar-url'
     ),
 
     # Generic

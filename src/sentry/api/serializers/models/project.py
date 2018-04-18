@@ -150,7 +150,7 @@ class ProjectSerializer(Serializer):
         feature_list = []
         for feature in (
             'global-events', 'data-forwarding', 'rate-limits', 'discard-groups', 'similarity-view',
-            'custom-inbound-filters', 'minidump',
+            'custom-inbound-filters',
         ):
             if features.has('projects:' + feature, obj, actor=user):
                 feature_list.append(feature)
@@ -247,6 +247,8 @@ class ProjectSummarySerializer(ProjectWithTeamSerializer):
             'isMember': attrs['is_member'],
             'hasAccess': attrs['has_access'],
             'dateCreated': obj.date_added,
+            'firstEvent': obj.first_event,
+            'platform': obj.platform,
         }
         if 'stats' in attrs:
             context['stats'] = attrs['stats']

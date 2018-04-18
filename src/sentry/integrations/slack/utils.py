@@ -4,7 +4,7 @@ import logging
 
 from six.moves.urllib.parse import parse_qs, urlencode, urlparse, urlunparse
 
-from sentry import features
+from sentry import features, tagstore
 from sentry.api.fields.actor import Actor
 from sentry.utils import json
 from sentry.utils.assets import get_asset_url
@@ -12,6 +12,7 @@ from sentry.utils.dates import to_timestamp
 from sentry.utils.http import absolute_uri
 from sentry.models import (
     GroupStatus, GroupAssignee, OrganizationMember, User, Identity, Team,
+    Release
 )
 
 logger = logging.getLogger('sentry.integrations.slack')
@@ -174,6 +175,18 @@ def build_attachment(group, event=None, tags=None, identity=None, actions=None, 
         'text': 'Ignore',
     }
 
+    has_releases = Release.objects.filter(
+        projects=group.project,
+        organization_id=group.project.organization_id
+    ).exists()
+
+    if not has_releases:
+        resolve_button.update({
+            'name': 'status',
+            'text': 'Resolve',
+            'value': 'resolved',
+        })
+
     if status == GroupStatus.RESOLVED:
         resolve_button.update({
             'name': 'status',
@@ -223,15 +236,19 @@ def build_attachment(group, event=None, tags=None, identity=None, actions=None, 
     if tags:
         event_tags = event.tags if event else group.get_latest_event().tags
 
-        for tag_key, tag_value in event_tags:
-            if tag_key in tags:
-                fields.append(
-                    {
-                        'title': tag_key.encode('utf-8'),
-                        'value': tag_value.encode('utf-8'),
-                        'short': True,
-                    }
-                )
+        for key, value in event_tags:
+            std_key = tagstore.get_standardized_key(key)
+            if std_key not in tags:
+                continue
+
+            labeled_value = tagstore.get_tag_value_label(key, value)
+            fields.append(
+                {
+                    'title': std_key.encode('utf-8'),
+                    'value': labeled_value.encode('utf-8'),
+                    'short': True,
+                }
+            )
 
     if actions:
         action_texts = filter(None, [build_action_text(group, identity, a) for a in actions])

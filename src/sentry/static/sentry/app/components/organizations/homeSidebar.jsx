@@ -2,7 +2,6 @@ import PropTypes from 'prop-types';
 import React from 'react';
 
 import createReactClass from 'create-react-class';
-
 import ListLink from '../listLink';
 import OrganizationState from '../../mixins/organizationState';
 import HookStore from '../../stores/hookStore';
@@ -124,7 +123,7 @@ const HomeSidebar = createReactClass({
           )}
 
           {access.has('org:read') && (
-            <ListLink to={`${pathPrefix}/stats/`}>{t('Stats')}</ListLink>
+            <ListLink to={`/organizations/${orgId}/stats/`}>{t('Stats')}</ListLink>
           )}
         </ul>
         <div>

@@ -27,10 +27,7 @@ import HookStore from '../../../../stores/hookStore';
 import InputControl from '../../components/forms/controls/input';
 import LoadingError from '../../../../components/loadingError';
 import LoadingIndicator from '../../../../components/loadingIndicator';
-import Panel from '../../components/panel';
-import PanelAlert from '../../components/panelAlert';
-import PanelBody from '../../components/panelBody';
-import PanelHeader from '../../components/panelHeader';
+import {Panel, PanelAlert, PanelBody, PanelHeader} from '../../../../components/panels';
 import ProjectKeyCredentials from './projectKeyCredentials';
 import RangeSlider from '../../components/forms/controls/rangeSlider';
 import SentryTypes from '../../../../proptypes';
@@ -291,7 +288,6 @@ const KeySettings = createReactClass({
     organization: PropTypes.object.isRequired,
     project: PropTypes.object.isRequired,
     access: PropTypes.object.isRequired,
-    features: PropTypes.object.isRequired,
     data: SentryTypes.ProjectKey.isRequired,
     onRemove: PropTypes.func.isRequired,
     rateLimitsEnabled: PropTypes.bool,
@@ -330,7 +326,7 @@ const KeySettings = createReactClass({
 
   render() {
     let {keyId, orgId, projectId} = this.props.params;
-    let {access, features, data, rateLimitsEnabled, organization, project} = this.props;
+    let {access, data, rateLimitsEnabled, organization, project} = this.props;
     let apiEndpoint = `/projects/${orgId}/${projectId}/keys/${keyId}/`;
 
     return (
@@ -386,7 +382,6 @@ const KeySettings = createReactClass({
             <ProjectKeyCredentials
               projectId={`${data.projectId}`}
               data={data}
-              features={features}
               showPublicKey
               showSecretKey
               showProjectId
@@ -463,7 +458,6 @@ export default class ProjectKeyDetails extends AsyncView {
           organization={organization}
           project={project}
           access={access}
-          features={features}
           params={params}
           rateLimitsEnabled={hasRateLimitsEnabled}
           data={data}

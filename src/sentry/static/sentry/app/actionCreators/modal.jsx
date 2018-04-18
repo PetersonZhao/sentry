@@ -16,12 +16,10 @@ export function closeModal() {
   ModalActions.closeModal();
 }
 
-export function openSudo({retryRequest, onClose} = {}) {
+export function openSudo({onClose, ...args} = {}) {
   import(/* webpackChunkName: "SudoModal" */ '../components/modals/sudoModal')
     .then(mod => mod.default)
-    .then(SudoModal =>
-      openModal(deps => <SudoModal {...deps} retryRequest={retryRequest} />, {onClose})
-    );
+    .then(SudoModal => openModal(deps => <SudoModal {...deps} {...args} />, {onClose}));
 }
 
 export function openDiffModal(options) {
@@ -46,6 +44,30 @@ export function openCreateTeamModal(options = {}) {
     .then(Modal => {
       openModal(deps => <Modal {...deps} {...options} />, {
         modalClassName: 'create-team-modal',
+      });
+    });
+}
+
+/**
+ * @param Object options.organization The organization to create a rules for
+ * @param Object options.project The project to create a rules for
+ */
+export function openCreateOwnershipRule(options = {}) {
+  import(/* webpackChunkName: "CreateOwnershipRuleModal" */ '../components/modals/createOwnershipRuleModal')
+    .then(mod => mod.default)
+    .then(Modal => {
+      openModal(deps => <Modal {...deps} {...options} />, {
+        modalClassName: 'create-ownership-rule-modal',
+      });
+    });
+}
+
+export function openCommandPalette(options = {}) {
+  import(/* webpackChunkName: "CommandPalette" */ '../components/modals/commandPalette')
+    .then(mod => mod.default)
+    .then(Modal => {
+      openModal(deps => <Modal {...deps} {...options} />, {
+        modalClassName: 'command-palette',
       });
     });
 }

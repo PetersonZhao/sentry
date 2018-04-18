@@ -64,7 +64,7 @@ class SlackNotifyServiceForm(forms.Form):
 
 class SlackNotifyServiceAction(EventAction):
     form_cls = SlackNotifyServiceForm
-    label = u'Send a notification to the {workspace} Slack workspace to {channel} and include tags {tags}'
+    label = u'Send a notification to the {workspace} Slack workspace to {channel} and show tags {tags} in notification'
 
     def __init__(self, *args, **kwargs):
         super(SlackNotifyServiceAction, self).__init__(*args, **kwargs)
@@ -176,17 +176,6 @@ class SlackNotifyServiceAction(EventAction):
             'token': integration.metadata['access_token'],
         }
 
-        # Get slack app resource permissions
-        resp = session.get('https://slack.com/api/apps.permissions.info', params=token_payload)
-        resp = resp.json()
-        if not resp.get('ok'):
-            extra = {'error': resp.get('error')}
-            self.logger.info('rule.slack.permission_check_failed', extra=extra)
-            return None
-
-        channel_perms = resp['info']['channel']['resources']
-        dm_perms = resp['info']['im']['resources']
-
         # Look for channel ID
         channels_payload = dict(token_payload, **{
             'exclude_archived': False,
@@ -202,15 +191,21 @@ class SlackNotifyServiceAction(EventAction):
         channel_id = {c['name']: c['id'] for c in resp['channels']}.get(name)
 
         if channel_id:
-            if channel_id in channel_perms['excluded_ids']:
-                return None
-
-            if not channel_perms['wildcard'] and channel_id not in channel_perms['ids']:
-                return None
-
             return (CHANNEL_PREFIX, channel_id)
 
-        # Look for user ID
+        # Channel may be private
+        resp = session.get('https://slack.com/api/groups.list', params=channels_payload)
+        resp = resp.json()
+        if not resp.get('ok'):
+            self.logger.info('rule.slack.group_list_failed', extra={'error': resp.get('error')})
+            return None
+
+        group_id = {c['name']: c['id'] for c in resp['groups']}.get(name)
+
+        if group_id:
+            return (CHANNEL_PREFIX, group_id)
+
+        # Channel may actually be a user
         resp = session.get('https://slack.com/api/users.list', params=token_payload)
         resp = resp.json()
         if not resp.get('ok'):
@@ -219,7 +214,7 @@ class SlackNotifyServiceAction(EventAction):
 
         member_id = {c['name']: c['id'] for c in resp['members']}.get(name)
 
-        if member_id and member_id in dm_perms['ids']:
+        if member_id:
             return (MEMBER_PREFIX, member_id)
 
         return None

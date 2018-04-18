@@ -23,6 +23,7 @@ export default class FieldFromConfig extends React.Component {
         'radio',
         'choice',
         'select',
+        'multichoice',
         'range',
       ]),
       required: PropTypes.bool,
@@ -32,7 +33,14 @@ export default class FieldFromConfig extends React.Component {
       help: PropTypes.oneOfType([PropTypes.node, PropTypes.func]),
       visible: PropTypes.oneOfType([PropTypes.bool, PropTypes.func]),
       disabled: PropTypes.oneOfType([PropTypes.bool, PropTypes.func]),
+      /**
+       * Should show a "return key" icon in input?
+       */
       showReturnButton: PropTypes.bool,
+      /**
+       * Iff false, disable saveOnBlur for field, instead show a save/cancel button
+       */
+      saveOnBlur: PropTypes.bool,
       getValue: PropTypes.func,
       setValue: PropTypes.func,
     }).isRequired,

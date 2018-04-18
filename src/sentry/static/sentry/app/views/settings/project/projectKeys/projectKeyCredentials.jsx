@@ -12,7 +12,6 @@ class ProjectKeyCredentials extends React.Component {
   static propTypes = {
     projectId: PropTypes.string.isRequired,
     data: SentryTypes.ProjectKey,
-    features: PropTypes.object,
 
     showDsn: PropTypes.bool,
     showDsnPublic: PropTypes.bool,
@@ -35,7 +34,6 @@ class ProjectKeyCredentials extends React.Component {
 
   render() {
     let {
-      features,
       projectId,
       data,
       showDsn,
@@ -49,36 +47,8 @@ class ProjectKeyCredentials extends React.Component {
 
     return (
       <React.Fragment>
-        {showDsn && (
-          <Field label={t('DSN')} inline={false} flexibleControlStateSize>
-            <TextCopyInput>
-              {getDynamicText({
-                value: data.dsn.secret,
-                fixed: data.dsn.secret.replace(
-                  new RegExp(`\/${projectId}$`),
-                  '/<<projectId>>'
-                ),
-              })}
-            </TextCopyInput>
-          </Field>
-        )}
-
         {showDsnPublic && (
-          <Field
-            label={t('DSN (Public)')}
-            help={tct(
-              'Use your public DSN with browser-based SDKs such as [link:raven-js].',
-              {
-                link: (
-                  <ExternalLink href="https://github.com/getsentry/raven-js">
-                    raven-js
-                  </ExternalLink>
-                ),
-              }
-            )}
-            inline={false}
-            flexibleControlStateSize
-          >
+          <Field label={t('DSN')} inline={false} flexibleControlStateSize>
             <TextCopyInput>
               {getDynamicText({
                 value: data.dsn.public,
@@ -116,30 +86,52 @@ class ProjectKeyCredentials extends React.Component {
           </Field>
         )}
 
-        {showMinidump &&
-          features.has('minidump') && (
-            <Field
-              label={t('Minidump Endpoint')}
-              help={tct(
-                'Use this endpoint to upload minidump crash reports, for example with Electron, Crashpad or Breakpad.',
-                {
-                  /* TODO: add a link to minidump docs */
-                }
-              )}
-              inline={false}
-              flexibleControlStateSize
-            >
-              <TextCopyInput>
-                {getDynamicText({
-                  value: data.dsn.minidump,
-                  fixed: data.dsn.minidump.replace(
-                    new RegExp(`\/${projectId}$`),
-                    '/<<projectId>>'
-                  ),
-                })}
-              </TextCopyInput>
-            </Field>
-          )}
+        {showMinidump && (
+          <Field
+            label={t('Minidump Endpoint')}
+            help={tct(
+              'Use this endpoint to upload [link], for example with Electron, Crashpad or Breakpad.',
+              {
+                link: (
+                  <ExternalLink href="https://docs.sentry.io/clients/minidump/">
+                    minidump crash reports
+                  </ExternalLink>
+                ),
+              }
+            )}
+            inline={false}
+            flexibleControlStateSize
+          >
+            <TextCopyInput>
+              {getDynamicText({
+                value: data.dsn.minidump,
+                fixed: data.dsn.minidump.replace(
+                  new RegExp(`\/${projectId}$`),
+                  '/<<projectId>>'
+                ),
+              })}
+            </TextCopyInput>
+          </Field>
+        )}
+
+        {showDsn && (
+          <Field
+            label={t('DSN (Legacy)')}
+            help={t('Use this DSN with server-side SDKs in older versions of Sentry.')}
+            inline={false}
+            flexibleControlStateSize
+          >
+            <TextCopyInput>
+              {getDynamicText({
+                value: data.dsn.secret,
+                fixed: data.dsn.secret.replace(
+                  new RegExp(`\/${projectId}$`),
+                  '/<<projectId>>'
+                ),
+              })}
+            </TextCopyInput>
+          </Field>
+        )}
 
         {showPublicKey && (
           <Field label={t('Public Key')} inline={true} flexibleControlStateSize>

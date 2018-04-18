@@ -1,7 +1,7 @@
 import {Flex, Box} from 'grid-emotion';
+import {keyBy} from 'lodash';
 import React from 'react';
 import styled from 'react-emotion';
-import _ from 'lodash';
 
 import {sortArray} from '../utils';
 import {t} from '../locale';
@@ -12,10 +12,7 @@ import Confirm from '../components/confirm';
 import EmptyMessage from './settings/components/emptyMessage';
 import IndicatorStore from '../stores/indicatorStore';
 import LoadingError from '../components/loadingError';
-import Panel from './settings/components/panel';
-import PanelBody from './settings/components/panelBody';
-import PanelHeader from './settings/components/panelHeader';
-import PanelItem from './settings/components/panelItem';
+import {Panel, PanelBody, PanelHeader, PanelItem} from '../components/panels';
 import PluginIcon from '../plugins/components/pluginIcon';
 import SettingsPageHeader from './settings/components/settingsPageHeader';
 import marked from '../utils/marked';
@@ -138,7 +135,6 @@ export default class OrganizationIntegrationConfig extends AsyncView {
     );
 
     this.dialog.focus();
-    this.dialog.onclose = () => document.location.refresh();
   };
 
   receiveMessage = message => {
@@ -161,7 +157,7 @@ export default class OrganizationIntegrationConfig extends AsyncView {
 
     // Merge the new integration into the list. If we're updating an
     // integration ovewrrite the old integration.
-    const keyedItems = _.keyBy(this.state.itemList, 'id');
+    const keyedItems = keyBy(this.state.itemList, i => i.id);
     const itemList = sortArray(
       Object.values({...keyedItems, [data.id]: data}),
       i => i.name

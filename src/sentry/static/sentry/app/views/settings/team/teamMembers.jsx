@@ -14,11 +14,11 @@ import {joinTeam, leaveTeam} from '../../../actionCreators/teams';
 import LoadingError from '../../../components/loadingError';
 import LoadingIndicator from '../../../components/loadingIndicator';
 import OrganizationState from '../../../mixins/organizationState';
-import Panel from '../components/panel';
-import PanelHeader from '../components/panelHeader';
+import {Panel, PanelHeader} from '../../../components/panels';
 import InlineSvg from '../../../components/inlineSvg';
 import EmptyMessage from '../components/emptyMessage';
 import {t} from '../../../locale';
+import space from '../../../styles/space';
 import overflowEllipsis from '../../../styles/overflowEllipsis';
 
 const TeamMembers = createReactClass({
@@ -219,7 +219,7 @@ const TeamMembers = createReactClass({
         <InlineSvg
           src="icon-circle-subtract"
           size="1.25em"
-          style={{marginRight: '0.5em'}}
+          style={{marginRight: space(1)}}
         />
         {t('Remove')}
       </Button>
@@ -260,15 +260,15 @@ const TeamMembers = createReactClass({
 const StyledMemberContainer = styled('div')`
   display: flex;
   justify-content: space-between;
-  padding: 1.25em 1em;
+  padding: ${space(2)};
   border-bottom: 1px solid ${p => p.theme.borderLight};
 `;
 
 const StyledUserListElement = styled('div')`
-  width: 250px;
   font-size: 0.875em;
   display: flex;
   align-items: center;
+  padding: ${space(0.5)};
 `;
 
 const StyledNameOrEmail = styled('div')`
@@ -282,13 +282,13 @@ const StyledAvatar = styled(props => <Avatar {...props} />)`
   min-height: 1.75em;
   width: 1.5em;
   height: 1.5em;
-  margin-right: 0.33em;
+  margin-right: ${space(0.5)};
 `;
 
 const StyledMembersLabel = styled('div')`
   width: 250px;
   font-size: 0.875em;
-  padding: 0.75em 0;
+  padding: ${space(1)} 0;
   text-transform: uppercase;
 `;
 

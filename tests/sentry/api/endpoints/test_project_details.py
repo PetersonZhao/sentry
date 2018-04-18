@@ -5,7 +5,8 @@ import six
 
 from django.core.urlresolvers import reverse
 
-from sentry.models import Project, ProjectBookmark, ProjectStatus, UserOption, DeletedProject, AuditLogEntry, AuditLogEntryEvent
+
+from sentry.models import Project, ProjectBookmark, ProjectStatus, UserOption, DeletedProject, AuditLogEntry, AuditLogEntryEvent, ProjectRedirect
 from sentry.testutils import APITestCase
 
 
@@ -62,6 +63,22 @@ class ProjectDetailsTest(APITestCase):
         response = self.client.get(url + '?include=stats')
         assert response.status_code == 200
         assert response.data['stats']['unresolved'] == 1
+
+    def test_project_renamed_302(self):
+        project = self.create_project()
+        self.login_as(user=self.user)
+
+        url = reverse('sentry-api-0-project-details', kwargs={
+            'organization_slug': project.organization.slug,
+            'project_slug': project.slug,
+        })
+
+        # Rename the project
+        self.client.put(url, data={'slug': 'foobar'})
+
+        response = self.client.get(url)
+        assert response.status_code == 302
+        assert response.data['detail']['slug'] == 'foobar'
 
 
 class ProjectUpdateTest(APITestCase):
@@ -181,10 +198,17 @@ class ProjectUpdateTest(APITestCase):
         assert resp.status_code == 200, resp.content
         project = Project.objects.get(id=self.project.id)
         assert project.slug == 'foobar'
+
         assert AuditLogEntry.objects.filter(
             organization=project.organization,
             event=AuditLogEntryEvent.PROJECT_EDIT,
         ).exists()
+
+        assert ProjectRedirect.objects.filter(
+            project=self.project,
+            redirect_slug=self.project.slug,
+        )
+
 
     def test_invalid_slug(self):
         new_project = self.create_project()

@@ -10,8 +10,20 @@ import Adapter from 'enzyme-adapter-react-16';
 jest.mock('app/translations');
 jest.mock('app/api');
 jest.mock('scroll-to-element', () => {});
+jest.mock('react-router', () => {
+  const ReactRouter = require.requireActual('react-router');
+  return {
+    Link: ReactRouter.Link,
+    withRouter: ReactRouter.withRouter,
+    browserHistory: {
+      push: jest.fn(),
+      replace: jest.fn(),
+      listen: jest.fn(() => {}),
+    },
+  };
+});
 
-const constantDate = new Date('2017-10-17T04:41:20'); //National Pasta Day
+const constantDate = new Date(1508208080000); //National Pasta Day
 MockDate.set(constantDate);
 
 // We generally use actual jQuery, and jest mocks takes precedence over node_modules
@@ -27,6 +39,9 @@ window.$ = window.jQuery = jQuery;
 window.sinon = sinon;
 window.scrollTo = sinon.spy();
 
+// Instead of wrapping codeblocks in `setTimeout`
+window.tick = () => new Promise(res => setTimeout(res));
+
 window.Raven = {
   captureMessage: sinon.spy(),
   captureException: sinon.spy(),
@@ -34,16 +49,17 @@ window.Raven = {
 };
 window.TestStubs = {
   // react-router's 'router' context
-  router: () => ({
-    push: sinon.spy(),
-    replace: sinon.spy(),
-    go: sinon.spy(),
-    goBack: sinon.spy(),
-    goForward: sinon.spy(),
-    setRouteLeaveHook: sinon.spy(),
-    isActive: sinon.spy(),
-    createHref: sinon.spy(),
+  router: (params = {}) => ({
+    push: jest.fn(),
+    replace: jest.fn(),
+    go: jest.fn(),
+    goBack: jest.fn(),
+    goForward: jest.fn(),
+    setRouteLeaveHook: jest.fn(),
+    isActive: jest.fn(),
+    createHref: jest.fn(),
     location: {query: {}},
+    ...params,
   }),
 
   location: () => ({
@@ -481,8 +497,9 @@ window.TestStubs = {
   Members: () => [
     {
       id: '1',
-      email: '',
-      name: '',
+      email: 'sentry1@test.com',
+      name: 'Sentry 1 Name',
+      role: '',
       roleName: '',
       pending: false,
       flags: {
@@ -498,16 +515,17 @@ window.TestStubs = {
     },
     {
       id: '2',
-      email: '',
-      name: '',
+      name: 'Sentry 2 Name',
+      email: 'sentry2@test.com',
+      role: '',
       roleName: '',
-      pending: false,
+      pending: true,
       flags: {
         'sso:linked': false,
       },
       user: {
         id: '2',
-        has2fa: true,
+        has2fa: false,
         name: 'Sentry 2 Name',
         email: 'sentry2@test.com',
         username: 'Sentry 2 Username',
@@ -515,9 +533,10 @@ window.TestStubs = {
     },
     {
       id: '3',
-      email: '',
-      name: '',
-      roleName: '',
+      name: 'Sentry 3 Name',
+      email: 'sentry3@test.com',
+      role: 'owner',
+      roleName: 'Owner',
       pending: false,
       flags: {
         'sso:linked': true,
@@ -528,6 +547,24 @@ window.TestStubs = {
         name: 'Sentry 3 Name',
         email: 'sentry3@test.com',
         username: 'Sentry 3 Username',
+      },
+    },
+    {
+      id: '4',
+      name: 'Sentry 4 Name',
+      email: 'sentry4@test.com',
+      role: 'owner',
+      roleName: 'Owner',
+      pending: false,
+      flags: {
+        'sso:linked': true,
+      },
+      user: {
+        id: '4',
+        has2fa: true,
+        name: 'Sentry 4 Name',
+        email: 'sentry4@test.com',
+        username: 'Sentry 4 Username',
       },
     },
   ],
@@ -909,11 +946,16 @@ window.MockApiClient = require.requireMock('app/api').Client;
 
 // default configuration
 ConfigStore.loadInitialData({
+  messages: [],
   user: {
     isAuthenticated: true,
     email: 'foo@example.com',
     options: {
       timezone: 'UTC',
+    },
+    hasPasswordAuth: true,
+    flags: {
+      newsletter_consent_prompt: false,
     },
   },
 });

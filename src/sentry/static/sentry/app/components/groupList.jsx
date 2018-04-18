@@ -6,14 +6,16 @@ import jQuery from 'jquery';
 
 import SentryTypes from '../proptypes';
 import ApiMixin from '../mixins/apiMixin';
-import GroupListHeader from '../components/groupListHeader';
+import GroupListHeader from './groupListHeader';
 import GroupStore from '../stores/groupStore';
-import LoadingError from '../components/loadingError';
-import LoadingIndicator from '../components/loadingIndicator';
+import LoadingError from './loadingError';
+import LoadingIndicator from './loadingIndicator';
 import ProjectState from '../mixins/projectState';
-import StreamGroup from '../components/stream/group';
+import StreamGroup from './stream/group';
 import utils from '../utils';
 import {t} from '../locale';
+import EmptyStateWarning from './emptyStateWarning';
+import {Panel, PanelBody} from './panels';
 
 const GroupList = createReactClass({
   displayName: 'GroupList',
@@ -23,7 +25,6 @@ const GroupList = createReactClass({
     canSelectGroups: PropTypes.bool,
     orgId: PropTypes.string.isRequired,
     projectId: PropTypes.string.isRequired,
-    bulkActions: PropTypes.bool.isRequired,
     environment: SentryTypes.Environment,
   },
 
@@ -129,24 +130,21 @@ const GroupList = createReactClass({
     else if (this.state.error) return <LoadingError onRetry={this.fetchData} />;
     else if (this.state.groupIds.length === 0)
       return (
-        <div className="box empty-stream">
-          <span className="icon icon-exclamation" />
-          <p>{t("There doesn't seem to be any events fitting the query.")}</p>
-        </div>
+        <Panel>
+          <PanelBody>
+            <EmptyStateWarning>
+              {t("There doesn't seem to be any events fitting the query.")}
+            </EmptyStateWarning>
+          </PanelBody>
+        </Panel>
       );
-
-    let wrapperClass;
-
-    if (!this.props.bulkActions) {
-      wrapperClass = 'stream-no-bulk-actions';
-    }
 
     let {orgId, projectId} = this.props;
 
     return (
-      <div className={wrapperClass}>
+      <Panel>
         <GroupListHeader />
-        <ul className="group-list">
+        <PanelBody>
           {this.state.groupIds.map(id => {
             return (
               <StreamGroup
@@ -158,8 +156,8 @@ const GroupList = createReactClass({
               />
             );
           })}
-        </ul>
-      </div>
+        </PanelBody>
+      </Panel>
     );
   },
 });

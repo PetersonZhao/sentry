@@ -16,32 +16,6 @@ class SlackNotifyActionTest(RuleTestCase):
     def setUp(self):
         event = self.get_event()
 
-        self.permissions = {
-            'ok': True,
-            'info': {
-                'channel': {
-                    'resources': {
-                        'wildcard': True,
-                        'excluded_ids': [],
-                        'ids': [],
-                    },
-                },
-                'im': {
-                    'resources': {
-                        'ids': ['member-id', 'morty-id'],
-                    },
-                },
-            },
-        }
-
-        responses.add(
-            method=responses.GET,
-            url='https://slack.com/api/apps.permissions.info',
-            status=200,
-            content_type='application/json',
-            body=json.dumps(self.permissions),
-        )
-
         self.integration = Integration.objects.create(
             provider='slack',
             name='Awesome Team',
@@ -94,7 +68,7 @@ class SlackNotifyActionTest(RuleTestCase):
         })
 
         assert rule.render_label(
-        ) == 'Send a notification to the Awesome Team Slack workspace to #my-channel and include tags [one, two]'
+        ) == 'Send a notification to the Awesome Team Slack workspace to #my-channel and show tags [one, two] in notification'
 
     def test_render_label_without_integration(self):
         self.integration.delete()
@@ -106,7 +80,7 @@ class SlackNotifyActionTest(RuleTestCase):
         })
 
         label = rule.render_label()
-        assert label == 'Send a notification to the [removed] Slack workspace to #my-channel and include tags []'
+        assert label == 'Send a notification to the [removed] Slack workspace to #my-channel and show tags [] in notification'
 
     @responses.activate
     def test_valid_channel_selected(self):
@@ -136,6 +110,48 @@ class SlackNotifyActionTest(RuleTestCase):
         assert form.is_valid()
 
     @responses.activate
+    def test_valid_private_channel_selected(self):
+        rule = self.get_rule(data={
+            'workspace': self.integration.id,
+            'channel': '#my-private-channel',
+            'tags': '',
+        })
+
+        channels = {
+            'ok': 'true',
+            'channels': [
+                {'name': 'my-channel', 'id': 'chan-id'},
+                {'name': 'other-chann', 'id': 'chan-id'},
+            ],
+        }
+
+        responses.add(
+            method=responses.GET,
+            url='https://slack.com/api/channels.list',
+            status=200,
+            content_type='application/json',
+            body=json.dumps(channels),
+        )
+
+        groups = {
+            'ok': 'true',
+            'groups': [
+                {'name': 'my-private-channel', 'id': 'chan-id'},
+            ],
+        }
+
+        responses.add(
+            method=responses.GET,
+            url='https://slack.com/api/groups.list',
+            status=200,
+            content_type='application/json',
+            body=json.dumps(groups),
+        )
+
+        form = rule.get_form_instance()
+        assert form.is_valid()
+
+    @responses.activate
     def test_valid_member_selected(self):
         rule = self.get_rule(data={
             'workspace': self.integration.id,
@@ -157,6 +173,21 @@ class SlackNotifyActionTest(RuleTestCase):
             status=200,
             content_type='application/json',
             body=json.dumps(channels),
+        )
+
+        groups = {
+            'ok': 'true',
+            'groups': [
+                {'name': 'my-private-channel', 'id': 'chan-id'},
+            ],
+        }
+
+        responses.add(
+            method=responses.GET,
+            url='https://slack.com/api/groups.list',
+            status=200,
+            content_type='application/json',
+            body=json.dumps(groups),
         )
 
         members = {
@@ -199,12 +230,19 @@ class SlackNotifyActionTest(RuleTestCase):
             body=json.dumps(channels),
         )
 
+        groups = {
+            'ok': 'true',
+            'groups': [
+                {'name': 'my-private-channel', 'id': 'chan-id'},
+            ],
+        }
+
         responses.add(
             method=responses.GET,
-            url='https://slack.com/api/channels.list',
+            url='https://slack.com/api/groups.list',
             status=200,
             content_type='application/json',
-            body=json.dumps(channels),
+            body=json.dumps(groups),
         )
 
         members = {

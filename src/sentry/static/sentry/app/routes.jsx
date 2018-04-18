@@ -1,6 +1,7 @@
 import {Redirect, Route, IndexRoute, IndexRedirect} from 'react-router';
 import React from 'react';
 
+import AcceptProjectTransfer from './views/acceptProjectTransfer';
 import AccountAuthorizations from './views/accountAuthorizations';
 import AccountLayout from './views/accountLayout';
 import AdminBuffer from './views/adminBuffer';
@@ -55,9 +56,9 @@ import OrganizationGeneralSettingsView from './views/settings/organization/gener
 import OrganizationStats from './views/organizationStats';
 import OrganizationTeams from './views/organizationTeams';
 import OrganizationTeamsProjectsView from './views/organizationTeamsProjects';
-import ProjectAlertRules from './views/projectAlertRules';
-import ProjectAlertRuleDetails from './views/projectAlertRuleDetails';
-import ProjectAlertSettings from './views/projectAlertSettings';
+import ProjectAlertRules from './views/settings/projectAlerts/projectAlertRules';
+import ProjectAlertRuleDetails from './views/settings/projectAlerts/projectAlertRuleDetails';
+import ProjectAlertSettings from './views/settings/projectAlerts/projectAlertSettings';
 import ProjectEnvironments from './views/projectEnvironments';
 import ProjectTags from './views/projectTags';
 import ProjectChooser from './views/projectChooser';
@@ -247,22 +248,18 @@ const projectSettingsRoutes = (
         import(/*webpackChunkName: "ProjectTeams"*/ './views/settings/project/projectTeams')}
       component={errorHandler(LazyLoad)}
     />
-    <Route name="Alerts" path="alerts/" component={errorHandler(ProjectAlertSettings)} />
-    <Route
-      path="alerts/rules/"
-      name="Alert Rules"
-      component={errorHandler(ProjectAlertRules)}
-    />
-    <Route
-      path="alerts/rules/new/"
-      name="New Alert Rule"
-      component={errorHandler(ProjectAlertRuleDetails)}
-    />
-    <Route
-      path="alerts/rules/:ruleId/"
-      name="Edit Alert Rule"
-      component={errorHandler(ProjectAlertRuleDetails)}
-    />
+    <Route name="Alerts" path="alerts/">
+      <IndexRoute component={errorHandler(ProjectAlertSettings)} />
+      <Route path="rules/" name="Rules" component={null}>
+        <IndexRoute component={errorHandler(ProjectAlertRules)} />
+        <Route path="new/" name="New" component={errorHandler(ProjectAlertRuleDetails)} />
+        <Route
+          path=":ruleId/"
+          name="Edit"
+          component={errorHandler(ProjectAlertRuleDetails)}
+        />
+      </Route>
+    </Route>
     <Route
       name="Environments"
       path="environments/"
@@ -326,6 +323,30 @@ const projectSettingsRoutes = (
       <IndexRedirect to="data-filters/" />
       <Route path=":filterType/" />
     </Route>
+    <Route
+      key="hooks/"
+      path="hooks/"
+      name="Service Hooks"
+      componentPromise={() =>
+        import(/*webpackChunkName: "ProjectServiceHooks"*/ './views/settings/project/projectServiceHooks')}
+      component={errorHandler(LazyLoad)}
+    />
+    <Route
+      key="hooks/new/"
+      path="hooks/new/"
+      name="Create Service Hook"
+      componentPromise={() =>
+        import(/*webpackChunkName: "ProjectCreateServiceHook"*/ './views/settings/project/projectCreateServiceHook')}
+      component={errorHandler(LazyLoad)}
+    />
+    <Route
+      key="hooks/:hookId/"
+      path="hooks/:hookId/"
+      name="Service Hook Details"
+      componentPromise={() =>
+        import(/*webpackChunkName: "ProjectServiceHookDetails"*/ './views/settings/project/projectServiceHookDetails')}
+      component={errorHandler(LazyLoad)}
+    />
     <Route path="keys/" name="Client Keys">
       <IndexRoute
         componentPromise={() =>
@@ -373,11 +394,15 @@ const projectSettingsRoutes = (
     />
     <Route
       path="install/"
-      name="Basic Configuration"
+      name="Configuration"
       component={errorHandler(ProjectDocsContext)}
     >
       <IndexRoute component={errorHandler(ProjectInstallOverview)} />
-      <Route path=":platform/" component={errorHandler(ProjectInstallPlatform)} />
+      <Route
+        path=":platform/"
+        name="Docs"
+        component={errorHandler(ProjectInstallPlatform)}
+      />
     </Route>
   </React.Fragment>
 );
@@ -499,13 +524,12 @@ function routes() {
           />
         </Route>
       </Route>
-
-      <Route name="Stats" path="stats/" component={errorHandler(OrganizationStats)} />
     </React.Fragment>
   );
 
   return (
     <Route path="/" component={errorHandler(App)}>
+      <Route path="/accept-transfer/" component={errorHandler(AcceptProjectTransfer)} />
       <Route path="/account/" component={errorHandler(AccountLayout)}>
         <Route path="authorizations/" component={errorHandler(AccountAuthorizations)} />
       </Route>
@@ -617,6 +641,7 @@ function routes() {
           />
           {hooksOrgRoutes}
           {orgSettingsRoutes}
+          <Route path="stats/" component={errorHandler(OrganizationStats)} />
         </Route>
 
         <Route

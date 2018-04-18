@@ -3,7 +3,7 @@ import React from 'react';
 import styled from 'react-emotion';
 import Button from '../buttons/button';
 import {t} from '../../locale';
-import {markUseful, nextStep} from '../../actionCreators/guides';
+import {recordFinish, nextStep} from '../../actionCreators/guides';
 import CueIcon from './cueIcon';
 import CloseIcon from './closeIcon';
 import AssistantContainer from './assistantContainer';
@@ -15,14 +15,26 @@ export default class GuideDrawer extends React.Component {
     step: PropTypes.number.isRequired,
     onFinish: PropTypes.func.isRequired,
     onDismiss: PropTypes.func.isRequired,
+    orgSlug: PropTypes.string,
   };
 
-  handleUseful = useful => {
-    markUseful(this.props.guide.id, useful);
+  handleFinish = useful => {
+    recordFinish(this.props.guide.id, useful);
     this.props.onFinish();
   };
 
+  interpolate(template, variables) {
+    let regex = /\${([^{]+)}/g;
+    return template.replace(regex, (match, g1) => {
+      return variables[g1.trim()];
+    });
+  }
+
   render() {
+    let messageVariables = {
+      orgSlug: this.props.orgSlug,
+    };
+
     return (
       <StyledAssistantContainer>
         <StyledAssistantInputRow>
@@ -39,7 +51,10 @@ export default class GuideDrawer extends React.Component {
         <StyledContent>
           <div
             dangerouslySetInnerHTML={{
-              __html: this.props.guide.steps[this.props.step - 1].message,
+              __html: this.interpolate(
+                this.props.guide.steps[this.props.step - 1].message,
+                messageVariables
+              ),
             }}
           />
           <div style={{marginTop: '1em'}}>
@@ -55,7 +70,7 @@ export default class GuideDrawer extends React.Component {
                 <Button
                   priority="success"
                   size="small"
-                  onClick={() => this.handleUseful(true)}
+                  onClick={() => this.handleFinish(true)}
                 >
                   {t('Yes')} &nbsp; &#x2714;
                 </Button>
@@ -63,7 +78,7 @@ export default class GuideDrawer extends React.Component {
                   priority="success"
                   size="small"
                   style={{marginLeft: '0.25em'}}
-                  onClick={() => this.handleUseful(false)}
+                  onClick={() => this.handleFinish(false)}
                 >
                   {t('No')} &nbsp; &#x2716;
                 </Button>

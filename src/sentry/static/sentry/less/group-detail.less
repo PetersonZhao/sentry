@@ -25,11 +25,6 @@
     }
   }
 
-  .short-id {
-    font-size: 17px !important;
-    font-family: @font-family-code;
-  }
-
   .event-message,
   .event-meta {
     line-height: 1.2;
@@ -721,7 +716,7 @@
         opacity: 0.6;
       }
 
-      .avatar {
+      .activity-avatar {
         margin-right: 4px;
         border-radius: 2px;
         position: relative;
@@ -1119,16 +1114,6 @@
   }
 }
 
-.sticky .event-toolbar {
-  margin: 0 0 0 200px;
-  padding-left: 20px;
-  padding-right: 20px;
-}
-
-.sticky + div .event {
-  margin-top: 82px;
-}
-
 .module-user .avatar {
   .square(64px);
 
@@ -1167,14 +1152,6 @@
   }
 }
 
-.sticky-sidebar {
-  .event-stats {
-    position: fixed;
-    top: 84px;
-    right: 20px;
-  }
-}
-
 .user-widget {
   position: relative;
   margin-bottom: 20px;
@@ -1185,6 +1162,7 @@
     top: 0;
     right: 0;
     box-shadow: 0 0 0 5px #fff;
+    border-radius: 5px;
   }
 
   .btn-group {

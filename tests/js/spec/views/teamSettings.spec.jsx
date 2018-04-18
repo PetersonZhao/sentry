@@ -5,6 +5,7 @@ import {mount, shallow} from 'enzyme';
 import TeamSettings from 'app/views/settings/team/teamSettings.old';
 import TeamStore from 'app/stores/teamStore';
 import NewTeamSettings from 'app/views/settings/team/teamSettings';
+import {mountWithTheme} from '../../../helpers';
 
 const childContextTypes = {
   organization: PropTypes.object,
@@ -66,21 +67,24 @@ describe('NewTeamSettings', function() {
     window.location.assign.restore();
   });
 
-  it('can change name and slug', function(done) {
+  it('can change name and slug', async function() {
     let team = TestStubs.Team();
     let putMock = MockApiClient.addMockResponse({
       url: `/teams/org/${team.slug}/`,
       method: 'PUT',
     });
+    let mountOptions = TestStubs.routerContext();
+    let {router} = mountOptions.context;
 
-    let wrapper = mount(
+    let wrapper = mountWithTheme(
       <NewTeamSettings
         routes={[]}
+        router={router}
         params={{orgId: 'org', teamId: team.slug}}
         team={team}
         onTeamChange={() => {}}
       />,
-      TestStubs.routerContext()
+      mountOptions
     );
 
     wrapper
@@ -102,6 +106,8 @@ describe('NewTeamSettings', function() {
       .simulate('change', {target: {value: 'new-slug'}})
       .simulate('blur');
 
+    wrapper.find('SaveButton').simulate('click');
+
     expect(putMock).toHaveBeenCalledWith(
       `/teams/org/${team.slug}/`,
       expect.objectContaining({
@@ -111,12 +117,8 @@ describe('NewTeamSettings', function() {
       })
     );
 
-    setTimeout(() => {
-      expect(
-        window.location.assign.calledWith('/settings/org/teams/new-slug/settings/')
-      ).toBe(true);
-      done();
-    }, 1);
+    await tick();
+    expect(router.push).toHaveBeenCalledWith('/settings/org/teams/new-slug/settings/');
   });
 
   it('needs team:admin in order to see remove team button', function() {
@@ -140,7 +142,7 @@ describe('NewTeamSettings', function() {
     ).not.toBe('Remove Team');
   });
 
-  xit('can remove team', async function() {
+  it('can remove team', async function() {
     let team = TestStubs.Team();
     let deleteMock = MockApiClient.addMockResponse({
       url: `/teams/org/${team.slug}/`,
@@ -180,6 +182,7 @@ describe('NewTeamSettings', function() {
       })
     );
 
+    await tick();
     await tick();
     expect(routerPushMock).toHaveBeenCalledWith('/settings/org/teams/');
 

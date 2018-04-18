@@ -266,7 +266,7 @@ STATIC_URL = '/_static/{version}/'
 
 # various middleware will use this to identify resources which should not access
 # cookies
-ANONYMOUS_STATIC_PREFIXES = ('/_static/', '/avatar/')
+ANONYMOUS_STATIC_PREFIXES = ('/_static/', '/avatar/', '/organization-avatar/', '/team-avatar/')
 
 STATICFILES_FINDERS = (
     "django.contrib.staticfiles.finders.FileSystemFinder",
@@ -765,7 +765,7 @@ SENTRY_FEATURES = {
     'projects:rate-limits': True,
     'projects:discard-groups': False,
     'projects:custom-inbound-filters': False,
-    'projects:minidump': False,
+    'projects:minidump': True,
 }
 
 # Default time zone for localization in the UI.
@@ -1119,6 +1119,7 @@ SENTRY_ROLES = (
                 'team:read',
                 'team:write',
                 'team:admin',
+                'org:integrations',
             ]
         ),
     }, {
@@ -1305,3 +1306,8 @@ SOUTH_TESTS_MIGRATE = os.environ.get('SOUTH_TESTS_MIGRATE', '0') == '1'
 
 TERMS_URL = None
 PRIVACY_URL = None
+
+# Toggles whether minidumps should be cached
+SENTRY_MINIDUMP_CACHE = False
+# The location for cached minidumps
+SENTRY_MINIDUMP_PATH = '/tmp/minidump'

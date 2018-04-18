@@ -7,15 +7,13 @@ import {t, tct} from '../../../locale';
 import ApiForm from '../components/forms/apiForm';
 import FormField from '../components/forms/formField';
 import MultipleCheckbox from '../components/forms/controls/multipleCheckbox';
-import Panel from '../components/panel';
-import PanelBody from '../components/panelBody';
-import PanelHeader from '../components/panelHeader';
+import {Panel, PanelBody, PanelHeader} from '../../../components/panels';
 import SettingsPageHeader from '../components/settingsPageHeader';
 import TextBlock from '../components/text/textBlock';
 
 const SORTED_DEFAULT_API_SCOPES = DEFAULT_API_SCOPES.sort();
 const API_CHOICES = API_SCOPES.map(s => [s, s]);
-const API_INDEX_ROUTE = '/settings/account/api/auth-tokens';
+const API_INDEX_ROUTE = '/settings/account/api/auth-tokens/';
 
 export default class ApiNewToken extends React.Component {
   onCancel = () => {

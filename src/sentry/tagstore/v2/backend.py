@@ -52,10 +52,7 @@ class V2TagStorage(TagStorage):
             grouptagvalue_model=GroupTagValue,
         )
 
-        self.setup_receivers(
-            tagvalue_model=TagValue,
-            grouptagvalue_model=GroupTagValue,
-        )
+        self.setup_receivers()
 
     def setup_cleanup(self):
         # TODO: fix for sharded DB
@@ -146,9 +143,7 @@ class V2TagStorage(TagStorage):
 
         deletion_manager.register(TagKey, TagKeyDeletionTask)
 
-    def setup_receivers(self, **kwargs):
-        super(V2TagStorage, self).setup_receivers(**kwargs)
-
+    def setup_receivers(self):
         from django.db.models.signals import post_save
 
         def record_project_tag_count(instance, created, **kwargs):
@@ -801,7 +796,7 @@ class V2TagStorage(TagStorage):
 
     def get_group_ids_for_search_filter(
             self, project_id, environment_id, tags, candidates=None, limit=1000):
-        from sentry.search.base import ANY, EMPTY
+        from sentry.search.base import ANY
         # Django doesnt support union, so we limit results and try to find
         # reasonable matches
 
@@ -815,10 +810,7 @@ class V2TagStorage(TagStorage):
         # for each remaining tag, find matches contained in our
         # existing set, pruning it down each iteration
         for k, v in tag_lookups:
-            if v is EMPTY:
-                return None
-
-            elif v != ANY:
+            if v != ANY:
                 base_qs = GroupTagValue.objects.filter(
                     project_id=project_id,
                     _key__key=k,

@@ -66,12 +66,22 @@ class SlackLinkIdentitiyView(BaseView):
         # TODO(epurkhiser): We could do some fancy slack querying here to
         # render a nice linking page with info about the user their linking.
 
-        Identity.objects.get_or_create(
-            external_id=params['slack_id'],
+        identity, created = Identity.objects.get_or_create(
             user=request.user,
             idp=idp,
-            status=IdentityStatus.VALID,
+            defaults={
+                'external_id': params['slack_id'],
+                'status': IdentityStatus.VALID,
+            },
         )
+
+        if not created:
+            # TODO(epurkhiser): In this case we probably want to prompt and
+            # warn them that they had a previous identity linked to slack.
+            identity.update(
+                external_id=params['slack_id'],
+                status=IdentityStatus.VALID
+            )
 
         payload = {
             'replace_original': False,
@@ -82,10 +92,14 @@ class SlackLinkIdentitiyView(BaseView):
         session = http.build_session()
         req = session.post(params['response_url'], json=payload)
         resp = req.json()
-        if not resp.get('ok'):
-            logger.error('slack.link-notify.response-error', extra={
-                'error': resp.get('error'),
-            })
+
+        # If the user took their time to link their slack account, we may no
+        # longer be able to respond, and we're not guaranteed able to post into
+        # the channel. Ignore Expired url errors.
+        #
+        # XXX(epurkhiser): Yes the error string has a space in it.
+        if not resp.get('ok') and resp.get('error') != 'Expired url':
+            logger.error('slack.link-notify.response-error', extra={'response': resp})
 
         return render_to_response('sentry/slack-linked.html', request=request, context={
             'channel_id': params['channel_id'],

@@ -1,8 +1,16 @@
+import {browserHistory} from 'react-router';
 import PropTypes from 'prop-types';
 import React from 'react';
+import Reflux from 'reflux';
+import createReactClass from 'create-react-class';
 
+import {
+  changeProjectSlug,
+  removeProject,
+  transferProject,
+} from '../actionCreators/projects';
+import {fields} from '../data/forms/projectGeneralSettings';
 import {getOrganizationState} from '../mixins/organizationState';
-import {removeProject, transferProject} from '../actionCreators/projects';
 import {t, tct} from '../locale';
 import AsyncView from './asyncView';
 import Button from '../components/buttons/button';
@@ -10,26 +18,18 @@ import Confirm from '../components/confirm';
 import Field from './settings/components/forms/field';
 import Form from './settings/components/forms/form';
 import JsonForm from './settings/components/forms/jsonForm';
-import Panel from './settings/components/panel';
-import PanelAlert from './settings/components/panelAlert';
-import PanelHeader from './settings/components/panelHeader';
+import {Panel, PanelAlert, PanelHeader} from '../components/panels';
+import ProjectsStore from '../stores/projectsStore';
 import SettingsPageHeader from './settings/components/settingsPageHeader';
 import TextBlock from './settings/components/text/textBlock';
 import TextField from './settings/components/forms/textField';
-import {fields} from '../data/forms/projectGeneralSettings';
+import recreateRoute from '../utils/recreateRoute';
 
-const AutoResolveFooter = () => (
-  <PanelAlert type="warning">
-    <strong>
-      {t(
-        'Note: Enabling auto resolve will immediately resolve anything that has ' +
-          'not been seen within this period of time. There is no undo!'
-      )}
-    </strong>
-  </PanelAlert>
-);
+class ProjectGeneralSettings extends AsyncView {
+  static propTypes = {
+    onChangeSlug: PropTypes.func,
+  };
 
-export default class ProjectGeneralSettings extends AsyncView {
   static contextTypes = {
     organization: PropTypes.object.isRequired,
   };
@@ -239,9 +239,10 @@ export default class ProjectGeneralSettings extends AsyncView {
           apiMethod="PUT"
           apiEndpoint={endpoint}
           onSubmitSuccess={resp => {
-            // Reload if slug has changed
             if (projectId !== resp.slug) {
-              window.location = `/${organization.slug}/${resp.slug}/settings/`;
+              changeProjectSlug(projectId, resp.slug);
+              // Container will redirect after stores get updated with new slug
+              this.props.onChangeSlug(resp.slug);
             }
           }}
         >
@@ -260,8 +261,7 @@ export default class ProjectGeneralSettings extends AsyncView {
           <JsonForm
             {...jsonFormProps}
             title={t('Event Settings')}
-            fields={[fields.defaultEnvironment, fields.resolveAge]}
-            renderFooter={() => <AutoResolveFooter />}
+            fields={[fields.resolveAge]}
           />
 
           <JsonForm
@@ -317,3 +317,34 @@ export default class ProjectGeneralSettings extends AsyncView {
     );
   }
 }
+
+const ProjectGeneralSettingsContainer = createReactClass({
+  mixins: [Reflux.listenTo(ProjectsStore, 'onProjectsUpdate')],
+  onProjectsUpdate(projects) {
+    if (!this.changedSlug) return;
+    let project = ProjectsStore.getBySlug(this.changedSlug);
+
+    if (!project) return;
+
+    browserHistory.replace(
+      recreateRoute('', {
+        ...this.props,
+        params: {
+          ...this.props.params,
+          projectId: this.changedSlug,
+        },
+      })
+    );
+  },
+
+  render() {
+    return (
+      <ProjectGeneralSettings
+        onChangeSlug={newSlug => (this.changedSlug = newSlug)}
+        {...this.props}
+      />
+    );
+  },
+});
+
+export default ProjectGeneralSettingsContainer;

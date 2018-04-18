@@ -2,7 +2,7 @@ import PropTypes from 'prop-types';
 import React from 'react';
 import createReactClass from 'create-react-class';
 import {browserHistory} from 'react-router';
-import {Flex} from 'grid-emotion';
+import {Box} from 'grid-emotion';
 
 import SentryTypes from '../../proptypes';
 import ApiMixin from '../../mixins/apiMixin';
@@ -12,9 +12,8 @@ import Pagination from '../../components/pagination';
 import GuideAnchor from '../../components/assistant/guideAnchor';
 import SearchBar from '../../components/searchBar';
 import {t, tct} from '../../locale';
-import Panel from '../settings/components/panel';
-import PanelBody from '../settings/components/panelBody';
-import PanelHeader from '../settings/components/panelHeader';
+import {Panel, PanelBody, PanelHeader} from '../../components/panels';
+import EmptyStateWarning from '../../components/emptyStateWarning';
 
 import ReleaseList from './releaseList';
 
@@ -152,10 +151,9 @@ const ProjectReleases = createReactClass({
 
   renderNoQueryResults() {
     return (
-      <div className="box empty-stream">
-        <span className="icon icon-exclamation" />
+      <EmptyStateWarning>
         <p>{t('Sorry, no releases match your filters.')}</p>
-      </div>
+      </EmptyStateWarning>
     );
   },
 
@@ -168,21 +166,20 @@ const ProjectReleases = createReactClass({
       : t("There don't seem to be any releases yet.");
 
     return (
-      <div className="empty-stream">
-        <span className="icon icon-exclamation" />
+      <EmptyStateWarning>
         <p>{message}</p>
         <p>
           <a href={this.getReleaseTrackingUrl()}>
             {t('Learn how to integrate Release Tracking')}
           </a>
         </p>
-      </div>
+      </EmptyStateWarning>
     );
   },
 
   render() {
     return (
-      <div>
+      <div className="ref-project-releases">
         <GuideAnchor target="releases" type="invisible" />
         <div className="row release-list-header">
           <div className="col-sm-7">
@@ -199,10 +196,14 @@ const ProjectReleases = createReactClass({
         </div>
         <Panel>
           <PanelHeader>
-            <Flex flex="4">{t('Version')}</Flex>
-            <Flex flex="4" className="hidden-xs" />
-            <Flex flex="2">{t('New Issues')}</Flex>
-            <Flex flex="2">{t('Last Event')}</Flex>
+            <Box flex="1">{t('Version')}</Box>
+            <Box w={4 / 12} pl={2} className="hidden-xs" />
+            <Box w={2 / 12} pl={2}>
+              {t('New Issues')}
+            </Box>
+            <Box w={2 / 12} pl={2}>
+              {t('Last Event')}
+            </Box>
           </PanelHeader>
           <PanelBody>{this.renderStreamBody()}</PanelBody>
         </Panel>

@@ -10,6 +10,7 @@ from .endpoints.api_tokens import ApiTokensEndpoint
 from .endpoints.assistant import AssistantEndpoint
 from .endpoints.auth_index import AuthIndexEndpoint
 from .endpoints.authenticator_index import AuthenticatorIndexEndpoint
+from .endpoints.broadcast_details import BroadcastDetailsEndpoint
 from .endpoints.broadcast_index import BroadcastIndexEndpoint
 from .endpoints.catchall import CatchallEndpoint
 from .endpoints.chunk import ChunkUploadEndpoint
@@ -45,6 +46,7 @@ from .endpoints.organization_api_key_details import OrganizationApiKeyDetailsEnd
 from .endpoints.organization_auth_providers import OrganizationAuthProvidersEndpoint
 from .endpoints.organization_auth_provider_details import OrganizationAuthProviderDetailsEndpoint
 from .endpoints.organization_auth_provider_send_reminders import OrganizationAuthProviderSendRemindersEndpoint
+from .endpoints.organization_avatar import OrganizationAvatarEndpoint
 from .endpoints.organization_details import OrganizationDetailsEndpoint
 from .endpoints.organization_shortid import ShortIdLookupEndpoint
 from .endpoints.organization_slugs import SlugsUpdateEndpoint
@@ -119,6 +121,7 @@ from .endpoints.project_processingissues import ProjectProcessingIssuesEndpoint,
 from .endpoints.project_reprocessing import ProjectReprocessingEndpoint
 from .endpoints.project_servicehooks import ProjectServiceHooksEndpoint
 from .endpoints.project_servicehook_details import ProjectServiceHookDetailsEndpoint
+from .endpoints.project_servicehook_stats import ProjectServiceHookStatsEndpoint
 from .endpoints.project_user_details import ProjectUserDetailsEndpoint
 from .endpoints.project_user_reports import ProjectUserReportsEndpoint
 from .endpoints.project_user_stats import ProjectUserStatsEndpoint
@@ -132,7 +135,7 @@ from .endpoints.dif_files import DifAssembleEndpoint
 from .endpoints.shared_group_details import SharedGroupDetailsEndpoint
 from .endpoints.system_health import SystemHealthEndpoint
 from .endpoints.system_options import SystemOptionsEndpoint
-from .endpoints.sudo import SudoEndpoint
+from .endpoints.team_avatar import TeamAvatarEndpoint
 from .endpoints.team_details import TeamDetailsEndpoint
 from .endpoints.team_groups_new import TeamGroupsNewEndpoint
 from .endpoints.team_groups_trending import TeamGroupsTrendingEndpoint
@@ -195,12 +198,10 @@ urlpatterns = patterns(
         AuthenticatorIndexEndpoint.as_view(),
         name='sentry-api-0-authenticator-index'),
 
-    # Sudo
-    url(r'^sudo/$', SudoEndpoint.as_view(), name='sentry-api-0-sudo'),
-
     # Broadcasts
     url(r'^broadcasts/$', BroadcastIndexEndpoint.as_view(),
         name='sentry-api-0-broadcast-index'),
+    url(r'^broadcasts/(?P<broadcast_id>[^\/]+)/$', BroadcastDetailsEndpoint.as_view()),
 
     # Project transfer
     url(r'^accept-transfer/$', AcceptProjectTransferEndpoint.as_view(),
@@ -361,6 +362,11 @@ urlpatterns = patterns(
         r'^organizations/(?P<organization_slug>[^\/]+)/auth-provider/send-reminders/$',
         OrganizationAuthProviderSendRemindersEndpoint.as_view(),
         name='sentry-api-0-organization-auth-provider-send-reminders'
+    ),
+    url(
+        r'^organizations/(?P<organization_slug>[^\/]+)/avatar/$',
+        OrganizationAvatarEndpoint.as_view(),
+        name='sentry-api-0-organization-avatar'
     ),
     url(
         r'^organizations/(?P<organization_slug>[^\/]+)/config/integrations/$',
@@ -532,6 +538,11 @@ urlpatterns = patterns(
         TeamStatsEndpoint.as_view(),
         name='sentry-api-0-team-stats'
     ),
+    url(
+        r'^teams/(?P<organization_slug>[^\/]+)/(?P<team_slug>[^\/]+)/avatar/$',
+        TeamAvatarEndpoint.as_view(),
+        name='sentry-api-0-team-avatar'
+    ),
 
     # Projects
     url(r'^projects/$', ProjectIndexEndpoint.as_view(),
@@ -628,6 +639,10 @@ urlpatterns = patterns(
     url(
         r'^projects/(?P<organization_slug>[^\/]+)/(?P<project_slug>[^\/]+)/hooks/(?P<hook_id>[^\/]+)/$',
         ProjectServiceHookDetailsEndpoint.as_view(),
+    ),
+    url(
+        r'^projects/(?P<organization_slug>[^\/]+)/(?P<project_slug>[^\/]+)/hooks/(?P<hook_id>[^\/]+)/stats/$',
+        ProjectServiceHookStatsEndpoint.as_view(),
     ),
     url(
         r'^projects/(?P<organization_slug>[^\/]+)/(?P<project_slug>[^\/]+)/(?:issues|groups)/$',
