@@ -220,6 +220,7 @@ class ProjectDetailsEndpoint(ProjectEndpoint):
             (request.auth and request.auth.has_scope('project:write'))
             or (request.access and request.access.has_scope('project:write'))
         )
+        changed_proj_settings = {}
 
         if has_project_write:
             serializer_cls = ProjectAdminSerializer
@@ -250,16 +251,20 @@ class ProjectDetailsEndpoint(ProjectEndpoint):
                     )
 
         changed = False
+
         if result.get('slug'):
             project.slug = result['slug']
             changed = True
+            changed_proj_settings['new_slug'] = project.slug
 
         if result.get('name'):
             project.name = result['name']
             changed = True
+            changed_proj_settings['new_project'] = project.name
 
         old_team_id = None
         new_team = None
+
         if result.get('team'):
             if features.has('organizations:new-teams',
                             project.organization, actor=request.user):
@@ -327,13 +332,13 @@ class ProjectDetailsEndpoint(ProjectEndpoint):
             project.update_option(
                 'digests:mail:maximum_delay', result['digestsMaxDelay'])
         if result.get('subjectPrefix') is not None:
-            project.update_option('mail:subject_prefix',
-                                  result['subjectPrefix'])
+            project.update_option('mail:subject_prefix', result['subjectPrefix'])
         if result.get('subjectTemplate'):
-            project.update_option('mail:subject_template',
-                                  result['subjectTemplate'])
+            if project.update_option('mail:subject_template', result['subjectTemplate']):
+                changed_proj_settings['mail:subject_template'] = result['subjectTemplate']
         if result.get('defaultEnvironment') is not None:
-            project.update_option('sentry:default_environment', result['defaultEnvironment'])
+            if project.update_option('sentry:default_environment', result['defaultEnvironment']):
+                changed_proj_settings['sentry:default_environment'] = result['defaultEnvironment']
         if result.get('scrubIPAddresses') is not None:
             project.update_option('sentry:scrub_ip_address', result['scrubIPAddresses'])
         if result.get('securityToken') is not None:
@@ -352,10 +357,11 @@ class ProjectDetailsEndpoint(ProjectEndpoint):
             project.update_option('sentry:safe_fields', result['safeFields'])
         # resolveAge can be None
         if 'resolveAge' in result:
-            project.update_option(
+            if project.update_option(
                 'sentry:resolve_age',
                 0 if result.get('resolveAge') is None else int(
-                    result['resolveAge']))
+                    result['resolveAge'])):
+                changed_proj_settings['sentry:resolve_age'] = result['resolveAge']
         if result.get('scrapeJavaScript') is not None:
             project.update_option('sentry:scrape_javascript', result['scrapeJavaScript'])
         if result.get('allowedDomains'):
@@ -479,7 +485,7 @@ class ProjectDetailsEndpoint(ProjectEndpoint):
                 organization=project.organization,
                 target_object=project.id,
                 event=AuditLogEntryEvent.PROJECT_EDIT,
-                data=project.get_audit_log_data(),
+                data=changed_proj_settings
             )
 
         data = serialize(project, request.user, DetailedProjectSerializer())
