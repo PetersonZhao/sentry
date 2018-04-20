@@ -209,7 +209,6 @@ class ProjectUpdateTest(APITestCase):
             redirect_slug=self.project.slug,
         )
 
-
     def test_invalid_slug(self):
         new_project = self.create_project()
         resp = self.client.put(self.path, data={
